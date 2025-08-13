@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coach de eSports – Salud Digital</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#131c2b; --panel2:#1b263a; --text:#eaf2ff; --muted:#9bb0d1;
+      --emerald:#34d399; --amber:#fbbf24; --rose:#fb7185; --sky:#38bdf8; --fuchsia:#e879f9;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#0b1220,#0e1628);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial}
+    .container{max-width:1100px;margin:0 auto;padding:16px}
+    .btn{background:#7dd3fc;color:#0b1220;font-weight:700;border:none;border-radius:14px;padding:12px 18px;cursor:pointer}
+    .btn:active{transform:translateY(1px)}
+    .h1{font-size:clamp(28px,4vw,46px);font-weight:900;text-align:center}
+    .grid{display:grid;gap:16px}
+    .two{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+    .card{background:var(--panel);border:1px solid #243048;border-radius:18px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-weight:700;color:#0b1220}
+    .g-amber{background:linear-gradient(90deg,#fbbf24,#d97706)}
+    .g-sky{background:linear-gradient(90deg,#38bdf8,#0284c7)}
+    .g-fuchsia{background:linear-gradient(90deg,#e879f9,#c026d3)}
+    .g-emerald{background:linear-gradient(90deg,#34d399,#059669)}
+    .muted{color:var(--muted)}
+    /* PLAY UI */
+    .hud{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .arena{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    .gamer{position:relative;background:rgba(27,38,58,.8);border:1px solid #2a3750;border-radius:16px;padding:12px;min-height:230px}
+    .gamer.disabled{opacity:.5}
+    .hearts span{font-size:20px;margin-left:2px;opacity:.4}
+    .hearts span.active{opacity:1}
+    .monitor{height:90px;border-radius:12px;display:grid;place-items:center;background:#2a3750;font-weight:800}
+    .perf{height:10px;background:#22314a;border-radius:999px;overflow:hidden}
+    .perf > span{display:block;height:100%}
+    .alert{position:absolute;left:50%;transform:translateX(-50%);top:-12px;padding:8px 12px;border-radius:999px;font-weight:800;color:#0b1220;white-space:nowrap}
+    .timerbar{height:5px;border-radius:999px;overflow:hidden;background:rgba(0,0,0,.25);margin-top:6px}
+    .tablet{display:flex;gap:8px;overflow:auto;background:var(--panel);border:1px solid #243048;border-radius:14px;padding:10px}
+    .chip{min-width:170px;border-radius:14px;padding:10px 12px;font-weight:800;color:#0b1220;cursor:grab;user-select:none}
+    /* Summary */
+    .summaryGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    .stat{background:var(--panel);border:1px solid #243048;border-radius:14px;padding:14px}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="h1">Coach de eSports: <span style="color:#7dd3fc">Salud Digital</span></h1>
+
+    <!-- BRIEFING -->
+    <section id="briefing" class="grid two">
+      <div class="card">
+        <h2>Briefing en la Sala de Estrategia</h2>
+        <p class="muted">Eres el Coach. Mantén sanos y concentrados a tus 3 gamers durante la gran final (90s).</p>
+        <ul id="rules" style="list-style:none;padding-left:0;display:grid;gap:10px;margin-top:10px"></ul>
+      </div>
+      <div class="card">
+        <h3>Cómo se juega</h3>
+        <ol class="muted">
+          <li>Arrastra el ícono correcto desde la <b>Tableta del Coach</b> al gamer con alerta antes de que el tiempo se ponga rojo.</li>
+          <li>Cada error baja el rendimiento. <b>3 advertencias</b> descalifican a un gamer.</li>
+          <li>Cuida a los tres para una <b>Victoria Perfecta</b>.</li>
+        </ol>
+        <div class="card" style="background:var(--panel2);margin-top:10px">
+          <b>Retroalimentación</b>
+          <p class="muted">Mensajes del Coach (texto + voz), barras y corazones. Íconos grandes y colores.
+          </p>
+        </div>
+        <button id="startBtn" class="btn" style="margin-top:12px">¡A LA FINAL!</button>
+      </div>
+    </section>
+
+    <!-- PLAY -->
+    <section id="play" style="display:none;gap:16px">
+      <div class="hud">
+        <div id="clock" style="font-weight:900;font-size:20px">⏱️ 90s</div>
+        <div id="phase" class="muted">Fase 1 · Ronda <span id="round">1</span></div>
+        <button id="pauseBtn" class="btn" style="background:#fde68a">Pausa</button>
+      </div>
+      <div id="arena" class="arena" aria-label="Arena de juego"></div>
+      <div class="grid" style="grid-template-columns:1fr auto;align-items:center">
+        <div id="coachMsg" class="card muted" style="min-height:56px"></div>
+        <div id="tablet" class="tablet" aria-label="Tableta del Coach"></div>
+      </div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section id="summary" style="display:none">
+      <h2>Resumen del Partido</h2>
+      <div class="summaryGrid">
+        <div class="stat"><div class="muted">Gamers que sobrevivieron</div><div id="sumSurv" style="font-size:32px;font-weight:900">0/3</div></div>
+        <div class="stat"><div class="muted">Intervenciones correctas</div><div id="sumOk" style="font-size:32px;font-weight:900">0</div></div>
+        <div class="stat"><div class="muted">Acciones incorrectas</div><div id="sumBad" style="font-size:32px;font-weight:900">0</div></div>
+      </div>
+      <div id="sumBanner" class="card" style="margin-top:14px;text-align:center;font-weight:900"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button id="harderBtn" class="btn" style="background:#f0abfc">Torneo ↑ Dificultad</button>
+        <button id="againBtn" class="btn">Jugar de nuevo</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ===== Data =====
+    const ALERTS = {
+      POSTURA: {label:'Postura de Poder', emoji:'🧘', colorClass:'g-amber', success:'¡Espalda recta, poder que se conecta!', fail:'¡Ay! Corrige la postura.'},
+      DISTANCIA: {label:'Distancia Inteligente', emoji:'👀', colorClass:'g-sky', success:'¡Vista lista, distancia correcta!', fail:'Muy cerquita, aléjate un poco.'},
+      PAUSA: {label:'Pausa Activa Mágica', emoji:'🕺', colorClass:'g-fuchsia', success:'¡Estira y carga energía!', fail:'Necesitas moverte un poco.'},
+      DESCANSO: {label:'Descanso Mental', emoji:'⏸️', colorClass:'g-emerald', success:'¡Mente fresca y foco al 100!', fail:'Respira y mira a lo lejos.'}
+    };
+    const TYPES = Object.keys(ALERTS);
+
+    // ===== State =====
+    let screen = 'briefing';
+    let round = 1;
+    let timeLeft = 90;
+    let intervalId = null;
+    let spawnTO = null;
+    let rafId = null;
+    let gamers = [];
+    let stats = {successes:0, failures:0, survived:3};
+
+    function speech(text){
+      try{ const u = new SpeechSynthesisUtterance(text); u.lang='es-MX'; u.rate=1.05; speechSynthesis.cancel(); speechSynthesis.speak(u);}catch(e){}
+    }
+
+    // ===== Elements =====
+    const el = (id)=>document.getElementById(id);
+
+    // Build rules list and tablet icons (briefing)
+    const rules = el('rules');
+    function renderRules(){
+      rules.innerHTML='';
+      TYPES.forEach(t=>{
+        const info = ALERTS[t];
+        const li = document.createElement('li');
+        li.className = 'card';
+        li.style.background = 'linear-gradient(90deg,transparent,rgba(255,255,255,.02))';
+        li.innerHTML = `
+          <span class="badge ${info.colorClass}">${info.emoji} ${info.label}</span>
+          <div class="muted" style="margin-top:6px">
+            ${t==='POSTURA'?'Espalda recta y cuello alineado.':''}
+            ${t==='DISTANCIA'?'A una distancia cómoda de la pantalla.':''}
+            ${t==='PAUSA'?'Levántate y estira para recargar energía.':''}
+            ${t==='DESCANSO'?'Aparta la vista y respira para relajar la mente.':''}
+          </div>`;
+        rules.appendChild(li);
+      });
+    }
+
+    // ===== Game setup =====
+    function baseDifficulty(){
+      const roundFactor = 1 - Math.min(.4, (round-1)*.08);
+      return {
+        minSpawn: 1400*roundFactor,
+        maxSpawn: 2600*roundFactor,
+        baseAlert: 4000*roundFactor,
+        phaseBonus: (p)=> p===1?1.2 : p===2?1.0 : 0.9,
+        sim3: 2,
+      };
+    }
+
+    function resetGame(){
+      gamers = [1,2,3].map(i=>({
+        id:i, name:['Luna','Max','Rex'][i-1], performance:60, hearts:3, activeAlert:null, disqualified:false
+      }));
+      timeLeft = 90; stats = {successes:0, failures:0, survived:3};
+      el('coachMsg').textContent = '';
+      updateClock();
+      renderArena();
+      renderTablet();
+    }
+
+    function startGame(){
+      screen='playing';
+      show('briefing',false); show('play',true); show('summary',false);
+      resetGame();
+      speech('¡Bienvenido, Coach! Recuerda las cuatro reglas de oro: Postura de Poder, Distancia Inteligente, Pausa Activa Mágica y Descanso Mental. ¡A la final!');
+      if(intervalId) clearInterval(intervalId);
+      intervalId = setInterval(()=>{
+        timeLeft--; updateClock();
+        if(timeLeft<=0 || gamers.every(g=>g.disqualified)) endMatch();
+      },1000);
+      scheduleSpawns();
+      alertTicker();
+    }
+
+    function endMatch(){
+      clearInterval(intervalId); intervalId=null;
+      if(spawnTO) clearTimeout(spawnTO);
+      if(rafId) cancelAnimationFrame(rafId);
+      const survivors = gamers.filter(g=>!g.disqualified).length;
+      stats.survived = survivors;
+      showSummary();
+      if(survivors===3) speech('¡Victoria perfecta! Equipo completo y saludable. Trofeo para todos.');
+      else if(survivors>=1) speech('¡Victoria parcial! Buen trabajo, sigamos practicando los hábitos.');
+      else speech('Derrota total. A veces pasa. Respira, aprende y vuelve más fuerte.');
+    }
+
+    // ===== Rendering =====
+    function show(id,visible){ el(id).style.display = visible? '' : 'none'; }
+    function updateClock(){ el('clock').textContent = `⏱️ ${timeLeft}s`; el('phase').innerHTML = `Fase ${phase()} · Ronda <span id="round">${round}</span>`; }
+
+    function renderArena(){
+      const arena = el('arena'); arena.innerHTML='';
+      gamers.forEach(g=>{
+        const card=document.createElement('div'); card.className='gamer'+(g.disqualified?' disabled':''); card.setAttribute('aria-label',`Zona de ${g.name}`);
+        card.addEventListener('dragover',e=>e.preventDefault());
+        card.addEventListener('drop',e=>{
+          e.preventDefault(); const t = e.dataTransfer.getData('text/alertType'); if(t) dropOnGamer(g, t);
+        });
+        const hearts = ['','',''].map((_,i)=>`<span class="${i<g.hearts?'active':''}">❤</span>`).join('');
+        const perfColor = g.performance>66? 'background:var(--emerald)': g.performance>33? 'background:var(--amber)': 'background:var(--rose)';
+        card.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-weight:800">🎮 ${g.name}</div>
+            <div class="hearts">${hearts}</div>
+          </div>
+          <div class="monitor">${g.disqualified?'<span class="muted">GAME OVER</span>':'<span class="muted">Partida en curso</span>'}</div>
+          <div style="margin-top:6px">
+            <div class="muted" style="font-size:12px">Rendimiento</div>
+            <div class="perf"><span style="width:${g.performance}%;${perfColor}"></span></div>
+          </div>`;
+        if(g.activeAlert && !g.disqualified){
+          const info = ALERTS[g.activeAlert.type];
+          const a = document.createElement('div'); a.className = `alert badge ${info.colorClass}`; a.innerHTML = `${info.emoji} ${info.label}`;
+          const tbar = document.createElement('div'); tbar.className='timerbar';
+          const tfill = document.createElement('div'); tfill.style.height='100%'; tfill.dataset.gid=g.id; tfill.dataset.start=g.activeAlert.startedAt; tfill.dataset.end=g.activeAlert.expiresAt; tbar.appendChild(tfill);
+          a.appendChild(tbar); card.appendChild(a);
+        }
+        if(g.disqualified){ const chair = document.createElement('div'); chair.style.position='absolute'; chair.style.inset='0'; chair.style.display='grid'; chair.style.placeItems='center'; chair.style.fontSize='64px'; chair.style.transform='rotate(12deg)'; chair.textContent='🪑'; card.appendChild(chair); }
+        arena.appendChild(card);
+      });
+    }
+
+    function renderTablet(){
+      const tablet = el('tablet'); tablet.innerHTML='';
+      TYPES.forEach(t=>{
+        const info = ALERTS[t];
+        const chip = document.createElement('div'); chip.className = `chip badge ${info.colorClass}`; chip.setAttribute('role','button'); chip.setAttribute('aria-label',`Arrastrar ${info.label}`);
+        chip.draggable = true; chip.addEventListener('dragstart',e=>e.dataTransfer.setData('text/alertType',t));
+        chip.innerHTML = `<div style="font-size:22px">${info.emoji}</div><div>${info.label}</div>`; tablet.appendChild(chip);
+      });
+    }
+
+    // ===== Mechanics =====
+    function phase(){ if(timeLeft>60) return 1; if(timeLeft>30) return 2; return 3; }
+
+    function scheduleSpawns(){
+      const diff = baseDifficulty();
+      const delay = rand(diff.minSpawn, diff.maxSpawn) * diff.phaseBonus(phase());
+      spawnTO = setTimeout(()=>{ spawnAlert(); scheduleSpawns(); }, delay);
+    }
+
+    function spawnAlert(){
+      // limit simultaneous alerts (phase 3 can show 2)
+      const activeCount = gamers.reduce((a,g)=>a+(g.activeAlert?1:0),0);
+      const maxSimul = phase()===3? baseDifficulty().sim3 : 1;
+      if(activeCount>=maxSimul) return;
+      const candidates = gamers.filter(g=>!g.activeAlert && !g.disqualified);
+      if(!candidates.length) return;
+      const chosen = candidates[Math.floor(Math.random()*candidates.length)];
+      const type = TYPES[Math.floor(Math.random()*TYPES.length)];
+      const now = Date.now();
+      const ms = baseDifficulty().baseAlert * (phase()===1?1.2: phase()===2?1.0:0.9);
+      chosen.activeAlert = {type, startedAt: now, expiresAt: now+ms};
+      renderArena();
+    }
+
+    function alertTicker(){
+      gamers.forEach(g=>{
+        if(!g.activeAlert || g.disqualified) return;
+        if(Date.now() >= g.activeAlert.expiresAt){
+          // Missed alert
+          g.hearts = Math.max(0, g.hearts-1);
+          const disq = g.hearts===0;
+          if(!disq) speech(ALERTS[g.activeAlert.type].fail);
+          g.performance = Math.max(0, g.performance-10);
+          g.activeAlert = null; g.disqualified = disq || g.disqualified;
+        }
+      });
+      // Update timer bars width
+      document.querySelectorAll('.timerbar > div').forEach(div=>{
+        const start = +div.dataset.start, end = +div.dataset.end; const left = Math.max(0, end - Date.now()); const total = end - start; const pct = Math.max(0, Math.min(100, (left/total)*100));
+        div.style.width = pct+'%';
+        div.style.background = pct<35? 'var(--rose)' : pct<70? 'var(--amber)' : 'var(--emerald)';
+      });
+      renderArena();
+      rafId = requestAnimationFrame(alertTicker);
+    }
+
+    function dropOnGamer(g, droppedType){
+      if(g.disqualified || !g.activeAlert) return;
+      const match = g.activeAlert.type===droppedType;
+      if(match){ stats.successes++; coachMsg(`${ALERTS[droppedType].emoji} ${ALERTS[droppedType].success}`); speech(ALERTS[droppedType].success); g.activeAlert=null; g.performance=Math.min(100, g.performance+8); }
+      else{ stats.failures++; coachMsg('Acción incorrecta. ¡Inténtalo de nuevo!'); speech('Acción incorrecta. Inténtalo de nuevo.'); g.performance=Math.max(0, g.performance-5); }
+      renderArena();
+    }
+
+    function coachMsg(msg){ el('coachMsg').textContent = msg; }
+
+    // ===== Summary =====
+    function showSummary(){
+      show('play',false); show('summary',true); screen='summary';
+      const survivors = gamers.filter(g=>!g.disqualified).length;
+      el('sumSurv').textContent = `${survivors}/3`;
+      el('sumOk').textContent = String(stats.successes);
+      el('sumBad').textContent = String(stats.failures);
+      const banner = el('sumBanner');
+      if(survivors===3){ banner.style.background='#065f46'; banner.textContent='¡Victoria perfecta! ¡Equipo saludable y concentrado! Trofeo para todos.'; }
+      else if(survivors>=1){ banner.style.background='#92400e'; banner.textContent='Victoria parcial. Buen trabajo. Sigue practicando hábitos de salud digital.'; }
+      else { banner.style.background='#7f1d1d'; banner.textContent='Derrota total. Identifica señales del cuerpo y vuelve a intentarlo.'; }
+    }
+
+    // ===== Utils =====
+    function rand(min,max){ return Math.random()*(max-min)+min; }
+
+    // ===== Wire up =====
+    el('startBtn').addEventListener('click',()=>{
+      show('briefing',false); show('play',true); startGame();
+    });
+    el('pauseBtn').addEventListener('click',()=>{ show('play',false); show('briefing',true); clearInterval(intervalId); if(spawnTO) clearTimeout(spawnTO); if(rafId) cancelAnimationFrame(rafId); });
+    el('againBtn').addEventListener('click',()=>{ show('summary',false); show('briefing',true); });
+    el('harderBtn').addEventListener('click',()=>{ round++; show('summary',false); show('briefing',true); });
+
+    renderRules();
+  </script>
+</body>
+</html>
