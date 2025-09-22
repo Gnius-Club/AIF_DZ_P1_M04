@@ -1,800 +1,846 @@
-// A.U.R.O.R.A. Mission 1 - Advanced IDE JavaScript
-
-class AuroraIDE {
-    constructor() {
-        this.currentModule = null;
-        this.completedModules = new Set();
-        this.currentTutorialStep = 1;
-        this.audioContext = null;
-        this.timerInterval = null;
-        this.startTime = 0;
-        this.feedbackTimeout = null;
-        
-        // Tutorial data - (sin cambios)
-        this.tutorialSteps = [
-            {
-                step: 1,
-                title: "Bienvenido/a, Ingeniero/a Senior",
-                description: "La corrupción ha alcanzado el núcleo lógico de A.U.R.O.R.A. Tu misión es auditar 6 módulos en busca de errores sutiles de lógica, estado y sintaxis.",
-                icon: "👨‍💻"
-            },
-            {
-                step: 2,
-                title: "Explorador de Archivos Avanzado",
-                description: "Tu acceso ha sido ampliado. Navega por la estructura de archivos del sistema para seleccionar un módulo.",
-                icon: "📁"
-            },
-            {
-                step: 3,
-                title: "Entorno de Desarrollo Profesional",
-                description: "Este es tu entorno de desarrollo. Nota el resaltado de sintaxis avanzado y la capacidad de navegación mejorada.",
-                icon: "💻"
-            },
-            {
-                step: 4,
-                title: "¡ALERTA DE CÓDIGO COMENTADO!",
-                description: "¡CUIDADO! Un simple '//' puede desactivar una línea de código vital. Si ves un comando importante en gris, podría ser un error. Bórralo para reactivarlo.",
-                icon: "⚠️"
-            },
-            {
-                step: 5,
-                title: "Documentación y Consola Avanzada",
-                description: "Tu documentación ahora incluye detalles sobre operadores lógicos. La nueva consola de salida mostrará mensajes y errores en tiempo real.",
-                icon: "📚"
-            },
-            {
-                step: 6,
-                title: "Interfaz Responsiva",
-                description: "En dispositivos móviles, la documentación y la consola se ubicarán en la parte inferior para optimizar el espacio.",
-                icon: "📱"
-            },
-            {
-                step: 7,
-                title: "Iniciar Auditoría",
-                description: "¡Todo listo! Comienza tu auditoría de código profesional.",
-                icon: "🚀"
-            }
-        ];
-
-        // Module data - (sin cambios, ya estaban actualizados)
-        this.modules = {
-             energia: {
-                id: "energia",
-                name: "Modulo_GestionDeEnergia.js",
-                icon: "⚡",
-                corruptCode: `// Protocolo de distribución de energía v3.1
-function gestionarCicloEnergia(datosSensor) {
-  // Constantes de operación
-  const CAPACIDAD_MAXIMA = 5000;
-  const NIVEL_CRITICO = 1000;
-  const UMBRAL_PANELES = 2500;
-  
-  let consumoActual = datosSensor.consumo;
-  let nivelBateria = datosSensor.bateria;
-  let estadoSistema = "Estable";
-
-  // Función interna para diagnóstico de reserva
-  function verificarReserva(bateria) {
-    if (bateria < NIVEL_CRITICO) {
-      // activarModoAhorro();
-      return "Emergencia";
+// Tutorial data
+const tutorialSections = [
+    {
+        id: 1,
+        title: "¡Bienvenido, Coach!",
+        narration: "¡Hola, futuro coach de eSports! Soy tu entrenador y te voy a enseñar cómo cuidar la salud de tus gamers durante una final muy importante. En este juego, tú eres el responsable de mantener a 3 jugadores profesionales en perfecto estado físico y mental. ¿Estás listo para convertirte en el mejor coach del mundo?",
+        animation: "welcome"
+    },
+    {
+        id: 2,
+        title: "Las 4 Reglas de Oro",
+        narration: "Todo buen coach debe conocer las 4 reglas de oro del gamer de élite. Primera: Postura de Poder, mantener la espalda recta como un superhéroe. Segunda: Distancia Inteligente, no pegarse mucho a la pantalla. Tercera: Pausa Activa Mágica, levantarse y estirarse como un gato. Cuarta: Descanso Mental, cerrar los ojos y relajar el cerebro. Estas reglas son tu superpoder para cuidar a tu equipo.",
+        animation: "rules"
+    },
+    {
+        id: 3,
+        title: "Conoce a tu Equipo",
+        narration: "Estos son tus 3 gamers: Alex, Luna y Max. Cada uno tiene una barra verde de rendimiento que muestra qué tan bien está jugando, y 3 corazones rojos que son como sus vidas. Si la barra baja mucho o pierden los 3 corazones, ¡quedarán fuera del torneo! Tu trabajo es mantenerlos felices y saludables.",
+        animation: "team"
+    },
+    {
+        id: 4,
+        title: "¡Alerta, Alerta!",
+        narration: "Cuando tus gamers necesiten ayuda, aparecerá una burbuja de alerta sobre sus cabezas con un ícono especial. La burbuja tiene un timer circular que se pone rojo. Si no actúas rápido, ¡tu gamer perderá un corazón! Las alertas aparecen cuando tienen mala postura, están muy cerca de la pantalla, necesitan estirarse o su mente necesita descansar.",
+        animation: "alerts"
+    },
+    {
+        id: 5,
+        title: "Tu Tableta Mágica",
+        narration: "Esta es tu tableta de coach con 4 botones súper importantes. Cuando veas una alerta, primero haz clic en el botón correcto de tu tableta: el de postura, distancia, pausa o descanso. Luego haz clic en el gamer que necesita ayuda. ¡Es como ser un doctor súper rápido! Tienes que elegir el botón correcto para cada problema.",
+        animation: "tablet"
+    },
+    {
+        id: 6,
+        title: "¡A Ganar el Torneo!",
+        narration: "Tienes 90 segundos para cuidar a tu equipo durante la final. Si todos tus gamers sobreviven, ¡ganarás el trofeo de oro! Si solo algunos sobreviven, tendrás una medalla de plata. Si todos pierden, no te preocupes, aprenderás para la próxima vez. Recuerda: un buen coach siempre cuida la salud de su equipo primero. ¡Ahora estás listo para ser el mejor coach de eSports del mundo!",
+        animation: "victory"
     }
-    return "Normal"
-  }
+];
 
-  if (nivelBateria <= UMBRAL_PANELES) {
-    console.log("Activando paneles solares por bajo nivel.");
-    activarPanelesSolares();
-  }
+// Game data
+const gameData = {
+    gameRules: [
+        { icon: "🧘", title: "Postura de Poder", description: "Mantener la espalda recta y cuello alineado", action: "postura" },
+        { icon: "👀", title: "Distancia Inteligente", description: "Mantenerse a distancia adecuada de la pantalla", action: "distancia" },
+        { icon: "🕺", title: "Pausa Activa Mágica", description: "Levantarse y estirarse", action: "pausa" },
+        { icon: "⏸️", title: "Descanso Mental", description: "Apartar la vista y relajar la mente", action: "descanso" }
+    ],
+    gamers: [
+        { name: "Alex", id: "gamer1", performance: 80, hearts: 3 },
+        { name: "Luna", id: "gamer2", performance: 80, hearts: 3 },
+        { name: "Max", id: "gamer3", performance: 80, hearts: 3 }
+    ],
+    alertTypes: [
+        { type: "postura", icon: "🤕", message: "¡Espalda recta!", color: "#ff6b6b" },
+        { type: "distancia", icon: "👁️", message: "¡Aléjate!", color: "#4ecdc4" },
+        { type: "pausa", icon: "🥱", message: "¡Estírate!", color: "#45b7d1" },
+        { type: "descanso", icon: "🧠", message: "¡Relájate!", color: "#96ceb4" }
+    ]
+};
 
-  // Lógica de distribución principal
-  if (consumoActual > nivelBateria) {
-    estadoSistema = "Déficit Energético"
-    // Redireccionar energía de sistemas no críticos
-    // redigirEnergia(consumoActual, nivelBateria);
-  } else if (nivelBateria = CAPACIDAD_MAXIMA) {
-    console.log("Batería llena, desactivando carga.");
-  }
-  
-  return estadoSistema;
-}`,
-                correctCode: `// Protocolo de distribución de energía v3.1
-function gestionarCicloEnergia(datosSensor) {
-  // Constantes de operación
-  const CAPACIDAD_MAXIMA = 5000;
-  const NIVEL_CRITICO = 1000;
-  const UMBRAL_PANELES = 2500;
-  
-  let consumoActual = datosSensor.consumo;
-  let nivelBateria = datosSensor.bateria;
-  let estadoSistema = "Estable";
+// Tutorial state
+let tutorialState = {
+    currentSection: 1,
+    isPlaying: false,
+    isMuted: false,
+    isPaused: false,
+    currentUtterance: null
+};
 
-  // Función interna para diagnóstico de reserva
-  function verificarReserva(bateria) {
-    if (bateria < NIVEL_CRITICO) {
-      activarModoAhorro();
-      return "Emergencia";
-    }
-    return "Normal";
-  }
+// Game state
+let gameState = {
+    currentScreen: 'tutorial',
+    gameTimer: 90,
+    gameActive: false,
+    selectedAction: null,
+    gamers: [...gameData.gamers],
+    activeGamers: 3,
+    correctInterventions: 0,
+    failedInterventions: 0,
+    activeAlerts: {},
+    alertIntervals: {},
+    gameInterval: null,
+    alertTimeouts: [],
+    difficultyPhase: 1
+};
 
-  if (nivelBateria <= UMBRAL_PANELES) {
-    console.log("Activando paneles solares por bajo nivel.");
-    activarPanelesSolares();
-  }
+// DOM elements - will be set after DOM loads
+let screens = {};
+let tutorialElements = {};
+let gameElements = {};
+let resultElements = {};
 
-  // Lógica de distribución principal
-  if (consumoActual > nivelBateria) {
-    estadoSistema = "Déficit Energético";
-    // Redireccionar energía de sistemas no críticos
-    redigirEnergia(consumoActual, nivelBateria);
-  } else if (nivelBateria == CAPACIDAD_MAXIMA) {
-    console.log("Batería llena, desactivando carga.");
-  }
-  
-  return estadoSistema;
-}`,
-            },
-            navegacion: {
-                id: "navegacion",
-                name: "Modulo_NavegacionAvanzada.js",
-                icon: "🗺️",
-                corruptCode: `// Sistema de Navegación Inercial Asistida
-function calcularVectorDeRuta(coordenadas) {
-  let velocidadCrucero = 1500; // en km/h
-  const DISTANCIA_LARGA = 100000; // en km
-  const VELOCIDAD_WARP = 9500;
+// Initialize application
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing app...');
+    initializeApp();
+});
 
-  // Función anidada para calcular consumo de combustible
-  function estimarConsumo(distancia, velocidad) {
-    let factor = velocidad > 2000 ? 1.5 : 1.1
-    // La fórmula de consumo es compleja.
-    let consumoEstimado = (distancia / velocidad) * factor;
-    // return consumoEstimado
-  }
+function initializeApp() {
+    // Initialize DOM element references
+    screens = {
+        tutorial: document.getElementById('tutorial-screen'),
+        game: document.getElementById('game-screen'),
+        results: document.getElementById('results-screen')
+    };
 
-  // Ajuste de velocidad para rutas largas
-  if (coordenadas.distanciaTotal > DISTANCIA_LARGA); {
-    console.log("Ruta interestelar detectada. Activando protocolo WARP.");
-    velocidadCrucero = VELOCIDAD_WARP
-  }
+    tutorialElements = {
+        skipBtn: document.getElementById('skip-tutorial'),
+        progress: document.getElementById('tutorial-progress'),
+        title: document.getElementById('tutorial-title'),
+        content: document.getElementById('tutorial-content'),
+        text: document.getElementById('tutorial-text'),
+        animation: document.getElementById('tutorial-animation'),
+        continueBtn: document.getElementById('continue-btn'),
+        muteBtn: document.getElementById('mute-btn'),
+        pauseBtn: document.getElementById('pause-audio')
+    };
 
-  let tiempoEstimado = coordenadas.distanciaTotal / velocidadCrucero
-  let consumoFinal = estimarConsumo(coordenadas.distanciaTotal, velocidadCrucero);
+    gameElements = {
+        helpBtn: document.getElementById('help-button'),
+        timer: document.getElementById('timer'),
+        activeGamers: document.getElementById('active-gamers'),
+        feedback: document.getElementById('feedback')
+    };
 
-  if (coordenadas.hayObstaculos == true) {
-    console.log("¡ALERTA! recalculando por obstáculos.");
-    // recalcularRutaEvasiva(coordenadas.obstaculos);
-  }
-  
-  console.log("Cálculo de vector finalizado.");
-  return {
-    velocidad: velocidadCrucero,
-    tiempo: tiempoEstimado,
-    consumo: consumoFinal,
-  }
-}`,
-                correctCode: `// Sistema de Navegación Inercial Asistida
-function calcularVectorDeRuta(coordenadas) {
-  let velocidadCrucero = 1500; // en km/h
-  const DISTANCIA_LARGA = 100000; // en km
-  const VELOCIDAD_WARP = 9500;
+    resultElements = {
+        playAgain: document.getElementById('play-again'),
+        resultTitle: document.getElementById('result-title'),
+        resultTrophy: document.getElementById('result-trophy'),
+        survivorsCount: document.getElementById('survivors-count'),
+        correctInterventions: document.getElementById('correct-interventions'),
+        failedInterventions: document.getElementById('failed-interventions'),
+        finalMessage: document.getElementById('final-message')
+    };
 
-  // Función anidada para calcular consumo de combustible
-  function estimarConsumo(distancia, velocidad) {
-    let factor = velocidad > 2000 ? 1.5 : 1.1;
-    // La fórmula de consumo es compleja.
-    let consumoEstimado = (distancia / velocidad) * factor;
-    return consumoEstimado;
-  }
+    console.log('DOM elements initialized');
+    setupEventListeners();
+    showScreen('tutorial');
+    startTutorial();
+}
 
-  // Ajuste de velocidad para rutas largas
-  if (coordenadas.distanciaTotal > DISTANCIA_LARGA) {
-    console.log("Ruta interestelar detectada. Activando protocolo WARP.");
-    velocidadCrucero = VELOCIDAD_WARP;
-  }
-
-  let tiempoEstimado = coordenadas.distanciaTotal / velocidadCrucero;
-  let consumoFinal = estimarConsumo(coordenadas.distanciaTotal, velocidadCrucero);
-
-  if (coordenadas.hayObstaculos == true) {
-    console.log("¡ALERTA! recalculando por obstáculos.");
-    recalcularRutaEvasiva(coordenadas.obstaculos);
-  }
-  
-  console.log("Cálculo de vector finalizado.");
-  return {
-    velocidad: velocidadCrucero,
-    tiempo: tiempoEstimado,
-    consumo: consumoFinal,
-  };
-}`,
-            },
-            comunicaciones: {
-                id: "comunicaciones",
-                name: "Modulo_Comunicaciones.js",
-                icon: "🛰️",
-                corruptCode: `// Protocolo de Transmisión de Datos Cuánticos
-function procesarYEnviarPaquete(datos) {
-  const POTENCIA_MINIMA = 75;
-  const TASA_ENCRIPTACION = 128;
-
-  function encriptar(data, tasa) {
-    if (!data) {
-      return null
-    }
-    console.log("Encriptando con tasa " + tasa + "...");
-    // Simulación de encriptación
-    let encriptado = "ENC_" + data.substring(0, 10)
-    return encriptado;
-  }
-  
-  let paqueteEncriptado = encriptar(datos.mensaje, TASA_ENCRIPTACION);
-  let potenciaTransmision = datos.potencia;
-  
-  // Verificación de la potencia
-  if (potenciaTransmision < POTENCIA_MINIMA) {
-    // console.log("Potencia insuficiente, aumentando...");
-    potenciaTransmision = POTENCIA_MINIMA;
-  }
-
-  if (paqueteEncriptado = null) {
-    console.log("Error: Paquete vacío, abortando transmisión."
-    return false;
-  } else {
-    // Transmitir el paquete de datos
-    transmitirPaquete(paqueteEncriptado, potenciaTransmision);
-  }
-}`,
-                correctCode: `// Protocolo de Transmisión de Datos Cuánticos
-function procesarYEnviarPaquete(datos) {
-  const POTENCIA_MINIMA = 75;
-  const TASA_ENCRIPTACION = 128;
-
-  function encriptar(data, tasa) {
-    if (!data) {
-      return null;
-    }
-    console.log("Encriptando con tasa " + tasa + "...");
-    // Simulación de encriptación
-    let encriptado = "ENC_" + data.substring(0, 10);
-    return encriptado;
-  }
-  
-  let paqueteEncriptado = encriptar(datos.mensaje, TASA_ENCRIPTACION);
-  let potenciaTransmision = datos.potencia;
-  
-  // Verificación de la potencia
-  if (potenciaTransmision < POTENCIA_MINIMA) {
-    console.log("Potencia insuficiente, aumentando...");
-    potenciaTransmision = POTENCIA_MINIMA;
-  }
-
-  if (paqueteEncriptado == null) {
-    console.log("Error: Paquete vacío, abortando transmisión.");
-    return false;
-  } else {
-    // Transmitir el paquete de datos
-    transmitirPaquete(paqueteEncriptado, potenciaTransmision);
-  }
-}`,
-            },
-            diagnostico: {
-                id: "diagnostico",
-                name: "Modulo_Diagnostico.js",
-                icon: "🩺",
-                corruptCode: `// Sistema de Autodiagnóstico y Mantenimiento Predictivo
-function ejecutarDiagnosticoProfundo() {
-  const TEMP_MAXIMA_CPU = 85; // Grados Celsius
-  const PRESION_MINIMA_CABINA = 90; // kPa
-
-  let informe = {
-    cpu: { temp: 92, estado: "OK" },
-    cabina: { presion: 88, estado: "OK" },
-    general: "Sin Novedad",
-  };
-
-  // Verificación de temperatura del núcleo
-  if (informe.cpu.temp > TEMP_MAXIMA_CPU%) {
-    informe.cpu.estado = "Sobrecalentamiento Crítico";
-    // activarSistemaRefrigeracionForzada();
-  }
-
-  // Verificación de presión en la cabina
-  if (informe.cabina.presion < PRESION_MINIMA_CABINA) {
-    informe.cabina.estado = "Despresurización";
-    sellarCompuertas()
-  }
-
-  // Generación del informe final
-  if (informe.cpu.estado !== "OK" || informe.cabina.estado !== "OK") {
-    informe.general = "¡ALERTA MÚLTIPLE DETECTADA!";
-  } else {
-    informe.general = "Todos los sistemas operan normalmente";
-  }
-
-  console.log(informe.general)
-  return informe
-}`,
-                correctCode: `// Sistema de Autodiagnóstico y Mantenimiento Predictivo
-function ejecutarDiagnosticoProfundo() {
-  const TEMP_MAXIMA_CPU = 85; // Grados Celsius
-  const PRESION_MINIMA_CABINA = 90; // kPa
-
-  let informe = {
-    cpu: { temp: 92, estado: "OK" },
-    cabina: { presion: 88, estado: "OK" },
-    general: "Sin Novedad",
-  };
-
-  // Verificación de temperatura del núcleo
-  if (informe.cpu.temp > TEMP_MAXIMA_CPU) {
-    informe.cpu.estado = "Sobrecalentamiento Crítico";
-    activarSistemaRefrigeracionForzada();
-  }
-
-  // Verificación de presión en la cabina
-  if (informe.cabina.presion < PRESION_MINIMA_CABINA) {
-    informe.cabina.estado = "Despresurización";
-    sellarCompuertas();
-  }
-
-  // Generación del informe final
-  if (informe.cpu.estado !== "OK" || informe.cabina.estado !== "OK") {
-    informe.general = "¡ALERTA MÚLTIPLE DETECTADA!";
-  } else {
-    informe.general = "Todos los sistemas operan normalmente";
-  }
-
-  console.log(informe.general);
-  return informe;
-}`,
-            },
-            seguridad: {
-                id: "seguridad",
-                name: "Modulo_Seguridad.js",
-                icon: "🔒",
-                corruptCode: `// Protocolo de Escudos Deflectores y Contramedidas
-function gestionarAmenazas(datosRadar) {
-  // Distancia de activación de escudos (en metros)
-  const DISTANCIA_CRITICA = 1000;
-  
-  let amenaza = datosRadar.getAmenazaMasCercana();
-  let estadoEscudos = "Inactivo";
-  
-  if (amenaza) {
-    console.log("Amenaza detectada a " + amenaza.distancia + " metros.");
+function setupEventListeners() {
+    console.log('Setting up event listeners...');
     
-    // Lógica de activación de escudos
-    if (amenaza.distancia < DISTANCIA_CRITICA); {
-      estadoEscudos = "¡ESCUDOS AL MÁXIMO!";
-      activarEscudos(100)
+    // Tutorial events - with explicit checks
+    if (tutorialElements.skipBtn) {
+        tutorialElements.skipBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Skip tutorial clicked');
+            skipTutorial();
+        });
     }
-
-    // Lógica de contramedidas
-    if (amenaza.tipo == "proyectil") {
-      // desplegarContramedidas();
-    } else if (amenaza.tipo == "interferencia") {
-      console.log("Activando contramedidas electrónicas")
-      // activarECM();
-    }
-  } else {
-    estadoEscudos = "Sin amenazas en el sector"
-    console.log(estadoEscudos);
-  }
-  
-  return estadoEscudos;
-}`,
-                correctCode: `// Protocolo de Escudos Deflectores y Contramedidas
-function gestionarAmenazas(datosRadar) {
-  // Distancia de activación de escudos (en metros)
-  const DISTANCIA_CRITICA = 1000;
-  
-  let amenaza = datosRadar.getAmenazaMasCercana();
-  let estadoEscudos = "Inactivo";
-  
-  if (amenaza) {
-    console.log("Amenaza detectada a " + amenaza.distancia + " metros.");
     
-    // Lógica de activación de escudos
-    if (amenaza.distancia < DISTANCIA_CRITICA) {
-      estadoEscudos = "¡ESCUDOS AL MÁXIMO!";
-      activarEscudos(100);
+    if (tutorialElements.continueBtn) {
+        tutorialElements.continueBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Continue tutorial clicked');
+            nextTutorialSection();
+        });
     }
-
-    // Lógica de contramedidas
-    if (amenaza.tipo == "proyectil") {
-      desplegarContramedidas();
-    } else if (amenaza.tipo == "interferencia") {
-      console.log("Activando contramedidas electrónicas");
-      activarECM();
-    }
-  } else {
-    estadoEscudos = "Sin amenazas en el sector";
-    console.log(estadoEscudos);
-  }
-  
-  return estadoEscudos;
-}`,
-            },
-            recoleccion: {
-                id: "recoleccion",
-                name: "Modulo_Recoleccion.js",
-                icon: "🗿",
-                corruptCode: `// Sistema Automatizado de Recolección y Análisis de Muestras
-function procesarMuestra(muestra) {
-  
-  const UMBRAL_CALIDAD = 95;
-  const TIPOS_VALIDOS = ['hielo', 'mineral', 'organico'];
-  
-  let decision = "Rechazada";
-  
-  // Función para verificar si el tipo es válido
-  function esTipoValido(tipo) {
-    return TIPOS_VALIDOS.includes(tipo);
-  }
-
-  console.log("Analizando muestra tipo: " + muestra.tipo);
-
-  if (esTipoValido(muestra.tipo)) {
     
-    // Análisis de calidad solo para tipos válidos
-    if (muestra.calidad > 95%) {
-      decision = "Aceptada para Almacenamiento";
-      // almacenarMuestraEnBodega(muestra);
-      
+    if (tutorialElements.muteBtn) {
+        tutorialElements.muteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Mute button clicked');
+            toggleMute();
+        });
+    }
+    
+    if (tutorialElements.pauseBtn) {
+        tutorialElements.pauseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Pause button clicked');
+            togglePauseAudio();
+        });
+    }
+
+    // Game events
+    if (gameElements.helpBtn) {
+        gameElements.helpBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Help button clicked');
+            showTutorial();
+        });
+    }
+    
+    // Control button event listeners
+    document.querySelectorAll('.control-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Control button clicked:', this.dataset.action);
+            selectAction(this.dataset.action);
+        });
+    });
+    
+    // Gamer click event listeners
+    document.querySelectorAll('.gamer').forEach(gamer => {
+        gamer.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Gamer clicked:', this.dataset.gamer);
+            handleGamerClick(this.dataset.gamer);
+        });
+    });
+
+    // Results events
+    if (resultElements.playAgain) {
+        resultElements.playAgain.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Play again clicked');
+            resetGame();
+        });
+    }
+    
+    console.log('Event listeners set up complete');
+}
+
+function showScreen(screenName) {
+    console.log('Showing screen:', screenName);
+    
+    // Hide all screens
+    Object.values(screens).forEach(screen => {
+        if (screen) {
+            screen.classList.remove('active');
+        }
+    });
+    
+    // Show selected screen
+    if (screens[screenName]) {
+        screens[screenName].classList.add('active');
+        gameState.currentScreen = screenName;
+        console.log('Screen switched to:', screenName);
     } else {
-      decision = "Rechazada por baja calidad";
-    }
-
-  } else {
-    decision = "Rechazada por tipo inválido";
-  }
-  
-  registrarDecision(muestra.id, decision)
-  return decision;
-`,
-                correctCode: `// Sistema Automatizado de Recolección y Análisis de Muestras
-function procesarMuestra(muestra) {
-  
-  const UMBRAL_CALIDAD = 95;
-  const TIPOS_VALIDOS = ['hielo', 'mineral', 'organico'];
-  
-  let decision = "Rechazada";
-  
-  // Función para verificar si el tipo es válido
-  function esTipoValido(tipo) {
-    return TIPOS_VALIDOS.includes(tipo);
-  }
-
-  console.log("Analizando muestra tipo: " + muestra.tipo);
-
-  if (esTipoValido(muestra.tipo)) {
-    
-    // Análisis de calidad solo para tipos válidos
-    if (muestra.calidad > 95) {
-      decision = "Aceptada para Almacenamiento";
-      almacenarMuestraEnBodega(muestra);
-      
-    } else {
-      decision = "Rechazada por baja calidad";
-    }
-
-  } else {
-    decision = "Rechazada por tipo inválido";
-  }
-  
-  registrarDecision(muestra.id, decision);
-  return decision;
-}`,
-            }
-        };
-
-        this.initAudio();
-        this.initTutorial();
-        this.bindEvents();
-    }
-
-    initAudio() {
-        try {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        } catch (e) {
-            console.warn('Web Audio API not supported');
-        }
-    }
-
-    playSound(frequency, duration = 200, type = 'sine') {
-        if (!this.audioContext) return;
-
-        const oscillator = this.audioContext.createOscillator();
-        const gainNode = this.audioContext.createGain();
-
-        oscillator.connect(gainNode);
-        gainNode.connect(this.audioContext.destination);
-
-        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
-        oscillator.type = type;
-
-        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration / 1000);
-
-        oscillator.start(this.audioContext.currentTime);
-        oscillator.stop(this.audioContext.currentTime + duration / 1000);
-    }
-
-    playUISound() { this.playSound(800, 150); }
-    playTypingSound() { this.playSound(400, 100); }
-    playSuccessSound() {
-        [523, 659, 784].forEach((freq, i) => {
-            setTimeout(() => this.playSound(freq, 300), i * 100);
-        });
-    }
-    playErrorSound() { this.playSound(200, 500, 'sawtooth'); }
-    
-    // --- MÉTODOS DE LA CONSOLA ELIMINADOS ---
-
-    showFeedback(message, type) {
-        const feedbackBar = document.getElementById('feedback-bar');
-        if (!feedbackBar) return;
-
-        // Limpiar timeout anterior si existe
-        clearTimeout(this.feedbackTimeout);
-
-        feedbackBar.textContent = message;
-        feedbackBar.className = `feedback-bar ${type}`; // Reemplaza todas las clases
-        
-        // Mostrar la barra
-        feedbackBar.classList.remove('hidden');
-
-        // Ocultar después de 3 segundos
-        this.feedbackTimeout = setTimeout(() => {
-            feedbackBar.classList.add('hidden');
-        }, 3000);
-    }
-    
-    initTutorial() {
-        this.updateTutorialStep(1);
-    }
-
-    updateTutorialStep(step) {
-        const stepData = this.tutorialSteps[step - 1];
-        if (!stepData) return;
-
-        document.getElementById('currentStep').textContent = step;
-        document.getElementById('tutorialTitle').textContent = stepData.title;
-        document.getElementById('tutorialIcon').textContent = stepData.icon;
-        document.getElementById('tutorialText').textContent = stepData.description;
-
-        const prevBtn = document.getElementById('tutorialPrev');
-        const nextBtn = document.getElementById('tutorialNext');
-        const startBtn = document.getElementById('tutorialStart');
-
-        prevBtn.style.display = step === 1 ? 'none' : 'inline-flex';
-        
-        if (step === 7) {
-            nextBtn.classList.add('hidden');
-            startBtn.classList.remove('hidden');
-        } else {
-            nextBtn.classList.remove('hidden');
-            startBtn.classList.add('hidden');
-        }
-
-        this.currentTutorialStep = step;
-    }
-
-    bindEvents() {
-        // Tutorial navigation
-        document.getElementById('tutorialPrev').addEventListener('click', () => {
-            this.playUISound();
-            if (this.currentTutorialStep > 1) this.updateTutorialStep(this.currentTutorialStep - 1);
-        });
-
-        document.getElementById('tutorialNext').addEventListener('click', () => {
-            this.playUISound();
-            if (this.currentTutorialStep < 7) this.updateTutorialStep(this.currentTutorialStep + 1);
-        });
-
-        document.getElementById('tutorialStart').addEventListener('click', () => {
-            this.playUISound();
-            this.startMission();
-        });
-
-        // File explorer
-        document.querySelectorAll('.file-item').forEach(item => {
-            item.addEventListener('click', () => {
-                this.playUISound();
-                this.loadModule(item.dataset.module);
-            });
-        });
-
-        // Editor controls
-        document.getElementById('compileBtn').addEventListener('click', () => {
-            this.playUISound();
-            this.compileCode();
-        });
-
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            this.playUISound();
-            this.resetModule();
-        });
-
-        // --- EVENTO DEL BOTÓN DE LIMPIAR CONSOLA ELIMINADO ---
-
-        // Code area typing
-        const codeArea = document.getElementById('codeArea');
-        let typingTimeout;
-        codeArea.addEventListener('input', () => {
-            clearTimeout(typingTimeout);
-            typingTimeout = setTimeout(() => this.playTypingSound(), 50);
-            this.updateLineNumbers();
-        });
-
-        // Completion screen events
-        document.getElementById('copyPasswordBtn').addEventListener('click', () => {
-            this.playUISound();
-            this.copyPassword();
-        });
-
-        document.getElementById('returnToTerminal').addEventListener('click', () => {
-            this.playUISound();
-            this.returnToTerminal();
-        });
-    }
-
-    startMission() {
-        document.getElementById('tutorialModal').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        // --- LLAMADA A LA CONSOLA ELIMINADA ---
-        this.startTime = Date.now();
-        this.timerInterval = setInterval(() => this.updateTimer(), 1000);
-    }
-
-    updateTimer() {
-        const timerElement = document.getElementById('missionTimer');
-        if (!timerElement) return;
-        const elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
-        const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
-        const seconds = (elapsedTime % 60).toString().padStart(2, '0');
-        timerElement.textContent = `${minutes}:${seconds}`;
-    }
-
-    loadModule(moduleId) {
-        const module = this.modules[moduleId];
-        if (!module) return;
-
-        document.querySelectorAll('.file-item').forEach(item => item.classList.remove('active'));
-        document.querySelector(`[data-module="${moduleId}"]`).classList.add('active');
-
-        this.currentModule = moduleId;
-        document.getElementById('currentFileName').textContent = module.name;
-        document.getElementById('codeArea').value = module.corruptCode;
-        
-        document.getElementById('compileBtn').disabled = false;
-        document.getElementById('resetBtn').disabled = false;
-
-        this.updateLineNumbers();
-        // --- LLAMADAS A LA CONSOLA ELIMINADAS ---
-    }
-
-    updateLineNumbers() {
-        const codeArea = document.getElementById('codeArea');
-        const lineNumbers = document.getElementById('lineNumbers');
-        const lines = codeArea.value.split('\n').length;
-        let lineNumbersHTML = '';
-        for (let i = 1; i <= lines; i++) {
-            lineNumbersHTML += `<div class="line-number">${i}</div>`;
-        }
-        lineNumbers.innerHTML = lineNumbersHTML;
-    }
-
-    compileCode() {
-        if (!this.currentModule) return;
-
-        const currentCode = document.getElementById('codeArea').value.trim();
-        const module = this.modules[this.currentModule];
-        const correctCode = module.correctCode.trim();
-
-        // --- MENSAJE DE COMPILACIÓN ELIMINADO ---
-
-        setTimeout(() => {
-            if (this.normalizeCode(currentCode) === this.normalizeCode(correctCode)) {
-                this.playSuccessSound();
-                this.showFeedback('✅ ¡COMPILACIÓN EXITOSA! Módulo reparado.', 'success');
-                this.markModuleComplete(this.currentModule);
-            } else {
-                this.playErrorSound();
-                // --- BUCLE DE ERRORES ELIMINADO ---
-                this.showFeedback('❌ ERRORES DETECTADOS. Revisa la sintaxis del código.', 'error');
-            }
-        }, 500); // Reducido el tiempo de espera
-    }
-
-    normalizeCode(code) {
-        return code.replace(/\s+/g, ' ').replace(/\s*([{}();,])\s*/g, '$1').trim();
-    }
-
-    markModuleComplete(moduleId) {
-        this.completedModules.add(moduleId);
-        
-        const fileItem = document.querySelector(`[data-module="${moduleId}"]`);
-        fileItem.querySelector('.file-status').textContent = '🟢';
-
-        document.getElementById('completedModules').textContent = this.completedModules.size;
-
-        if (this.completedModules.size === 6) {
-            clearInterval(this.timerInterval);
-            setTimeout(() => this.showCompletionScreen(), 2000);
-        }
-    }
-
-    resetModule() {
-        if (!this.currentModule) return;
-        const module = this.modules[this.currentModule];
-        document.getElementById('codeArea').value = module.corruptCode;
-        this.updateLineNumbers();
-        // --- MENSAJE DE REINICIO ELIMINADO ---
-    }
-
-    showCompletionScreen() {
-        this.playSuccessSound();
-        document.getElementById('mainApp').classList.add('hidden');
-        document.getElementById('completionScreen').classList.remove('hidden');
-        
-        setTimeout(() => {
-            const password = this.generatePassword();
-            document.getElementById('generatedPassword').textContent = password;
-        }, 2000);
-    }
-
-    generatePassword() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*-/.';
-        const getRandomChar = () => chars[Math.floor(Math.random() * chars.length)];
-        return `AURORA${getRandomChar()}M${getRandomChar()}I${getRandomChar()}S${getRandomChar()}I${getRandomChar()}O${getRandomChar()}N${getRandomChar()}2`;
-    }
-
-    async copyPassword() {
-        const password = document.getElementById('generatedPassword').textContent;
-        try {
-            await navigator.clipboard.writeText(password);
-            this.showTemporaryMessage('Contraseña copiada al portapapeles!');
-        } catch (err) {
-            const textArea = document.createElement('textarea');
-            textArea.value = password;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            this.showTemporaryMessage('Contraseña copiada!');
-        }
-    }
-
-    showTemporaryMessage(message) {
-        const button = document.getElementById('copyPasswordBtn');
-        const originalText = button.textContent;
-        button.textContent = `✅ ${message}`;
-        button.style.background = '#00ff88';
-        button.style.color = '#000';
-        
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.style.background = '';
-            button.style.color = '';
-        }, 2000);
-    }
-
-    returnToTerminal() {
-        window.open('https://gnius-club.github.io/AURORA', '_blank');
+        console.error('Screen not found:', screenName);
     }
 }
 
-// Initialize the application when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.aurora = new AuroraIDE();
-});
+// Tutorial Functions
+function startTutorial() {
+    console.log('Starting tutorial');
+    tutorialState.currentSection = 1;
+    renderTutorialSection();
+}
 
-// Resume audio context on user interaction
-document.addEventListener('click', function resumeAudio() {
-    if (window.aurora && window.aurora.audioContext && window.aurora.audioContext.state === 'suspended') {
-        window.aurora.audioContext.resume();
+function renderTutorialSection() {
+    const section = tutorialSections[tutorialState.currentSection - 1];
+    console.log('Rendering tutorial section:', tutorialState.currentSection, section.title);
+    
+    if (tutorialElements.progress) {
+        tutorialElements.progress.textContent = `${tutorialState.currentSection}/6`;
     }
-}, { once: true });
+    
+    if (tutorialElements.title) {
+        tutorialElements.title.textContent = section.title;
+    }
+    
+    if (tutorialElements.text) {
+        tutorialElements.text.textContent = section.narration;
+    }
+    
+    renderTutorialAnimation(section.animation);
+    
+    // Start narration automatically after a short delay
+    setTimeout(() => {
+        if (!tutorialState.isMuted) {
+            speakText(section.narration);
+        }
+    }, 500);
+}
+
+function renderTutorialAnimation(animationType) {
+    console.log('Rendering animation:', animationType);
+    let animationHTML = '';
+    
+    switch(animationType) {
+        case 'welcome':
+            animationHTML = '<div class="welcome-animation">🎮</div>';
+            break;
+        case 'rules':
+            animationHTML = `
+                <div class="rules-animation">
+                    <div class="rule-demo">
+                        <div class="rule-demo-icon">🧘</div>
+                        <div>Postura</div>
+                    </div>
+                    <div class="rule-demo">
+                        <div class="rule-demo-icon">👀</div>
+                        <div>Distancia</div>
+                    </div>
+                    <div class="rule-demo">
+                        <div class="rule-demo-icon">🕺</div>
+                        <div>Pausa</div>
+                    </div>
+                    <div class="rule-demo">
+                        <div class="rule-demo-icon">⏸️</div>
+                        <div>Descanso</div>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'team':
+            animationHTML = `
+                <div class="team-animation">
+                    <div class="mini-gamer">Alex</div>
+                    <div class="mini-gamer">Luna</div>
+                    <div class="mini-gamer">Max</div>
+                </div>
+            `;
+            break;
+        case 'alerts':
+            animationHTML = `
+                <div class="alert-animation">
+                    <div class="demo-alert">🤕 ¡ALERTA!</div>
+                </div>
+            `;
+            break;
+        case 'tablet':
+            animationHTML = `
+                <div class="tablet-animation">
+                    <div class="demo-tablet-btn">🧘</div>
+                    <div class="demo-tablet-btn">👀</div>
+                    <div class="demo-tablet-btn">🕺</div>
+                    <div class="demo-tablet-btn">⏸️</div>
+                </div>
+            `;
+            break;
+        case 'victory':
+            animationHTML = '<div class="victory-animation">🏆</div>';
+            break;
+        default:
+            animationHTML = '<div class="welcome-animation">🎮</div>';
+    }
+    
+    if (tutorialElements.animation) {
+        tutorialElements.animation.innerHTML = animationHTML;
+    }
+}
+
+function nextTutorialSection() {
+    console.log('Next tutorial section called, current:', tutorialState.currentSection);
+    stopCurrentSpeech();
+    
+    if (tutorialState.currentSection < 6) {
+        tutorialState.currentSection++;
+        console.log('Advancing to section:', tutorialState.currentSection);
+        renderTutorialSection();
+    } else {
+        console.log('Tutorial complete, ending tutorial');
+        endTutorial();
+    }
+}
+
+function skipTutorial() {
+    console.log('Skipping tutorial');
+    stopCurrentSpeech();
+    endTutorial();
+}
+
+function endTutorial() {
+    console.log('Ending tutorial, starting game');
+    showScreen('game');
+    startGame();
+}
+
+function showTutorial() {
+    console.log('Showing tutorial from help button');
+    if (gameState.gameActive) {
+        pauseGame();
+    }
+    
+    tutorialState.currentSection = 1;
+    showScreen('tutorial');
+    renderTutorialSection();
+}
+
+function speakText(text) {
+    if (tutorialState.isMuted || !('speechSynthesis' in window)) {
+        console.log('Speech disabled or not available');
+        return;
+    }
+    
+    console.log('Speaking text:', text.substring(0, 50) + '...');
+    stopCurrentSpeech();
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'es-ES';
+    utterance.rate = 0.9;
+    utterance.pitch = 1.1;
+    utterance.volume = 0.8;
+    
+    utterance.onend = () => {
+        tutorialState.isPlaying = false;
+        tutorialState.currentUtterance = null;
+        console.log('Speech ended');
+    };
+    
+    utterance.onerror = (event) => {
+        tutorialState.isPlaying = false;
+        tutorialState.currentUtterance = null;
+        console.log('Speech error:', event.error);
+    };
+    
+    tutorialState.currentUtterance = utterance;
+    tutorialState.isPlaying = true;
+    speechSynthesis.speak(utterance);
+}
+
+function stopCurrentSpeech() {
+    if (speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+        console.log('Speech stopped');
+    }
+    tutorialState.isPlaying = false;
+    tutorialState.currentUtterance = null;
+}
+
+function toggleMute() {
+    tutorialState.isMuted = !tutorialState.isMuted;
+    console.log('Mute toggled:', tutorialState.isMuted);
+    
+    if (tutorialElements.muteBtn) {
+        tutorialElements.muteBtn.textContent = tutorialState.isMuted ? '🔇' : '🔊';
+    }
+    
+    if (tutorialState.isMuted) {
+        stopCurrentSpeech();
+    }
+}
+
+function togglePauseAudio() {
+    console.log('Toggle pause audio called');
+    if (tutorialState.isPlaying && speechSynthesis.speaking) {
+        speechSynthesis.pause();
+        if (tutorialElements.pauseBtn) {
+            tutorialElements.pauseBtn.textContent = '▶️';
+        }
+        tutorialState.isPaused = true;
+        console.log('Speech paused');
+    } else if (tutorialState.isPaused && speechSynthesis.paused) {
+        speechSynthesis.resume();
+        if (tutorialElements.pauseBtn) {
+            tutorialElements.pauseBtn.textContent = '⏸️';
+        }
+        tutorialState.isPaused = false;
+        console.log('Speech resumed');
+    }
+}
+
+// Game Functions
+function startGame() {
+    console.log('Starting game');
+    gameState = {
+        ...gameState,
+        gameTimer: 90,
+        gameActive: true,
+        selectedAction: null,
+        gamers: gameData.gamers.map(g => ({...g})),
+        activeGamers: 3,
+        correctInterventions: 0,
+        failedInterventions: 0,
+        activeAlerts: {},
+        alertIntervals: {},
+        difficultyPhase: 1
+    };
+    
+    updateGameUI();
+    startGameTimer();
+    startAlertSystem();
+}
+
+function pauseGame() {
+    console.log('Pausing game');
+    gameState.gameActive = false;
+    if (gameState.gameInterval) {
+        clearInterval(gameState.gameInterval);
+    }
+}
+
+function resumeGame() {
+    console.log('Resuming game');
+    gameState.gameActive = true;
+    startGameTimer();
+}
+
+function startGameTimer() {
+    if (gameElements.timer) {
+        gameElements.timer.textContent = gameState.gameTimer;
+    }
+    
+    gameState.gameInterval = setInterval(() => {
+        gameState.gameTimer--;
+        if (gameElements.timer) {
+            gameElements.timer.textContent = gameState.gameTimer;
+        }
+        
+        // Update difficulty phase
+        if (gameState.gameTimer <= 60 && gameState.difficultyPhase === 1) {
+            gameState.difficultyPhase = 2;
+        } else if (gameState.gameTimer <= 30 && gameState.difficultyPhase === 2) {
+            gameState.difficultyPhase = 3;
+        }
+        
+        if (gameState.gameTimer <= 0) {
+            endGame();
+        }
+    }, 1000);
+}
+
+function startAlertSystem() {
+    scheduleNextAlert();
+}
+
+function scheduleNextAlert() {
+    if (!gameState.gameActive) return;
+    
+    let minDelay, maxDelay;
+    switch (gameState.difficultyPhase) {
+        case 1:
+            minDelay = 8000;
+            maxDelay = 12000;
+            break;
+        case 2:
+            minDelay = 5000;
+            maxDelay = 8000;
+            break;
+        case 3:
+            minDelay = 3000;
+            maxDelay = 6000;
+            break;
+    }
+    
+    const delay = Math.random() * (maxDelay - minDelay) + minDelay;
+    
+    const timeout = setTimeout(() => {
+        createAlert();
+        scheduleNextAlert();
+    }, delay);
+    
+    gameState.alertTimeouts.push(timeout);
+}
+
+function createAlert() {
+    if (!gameState.gameActive) return;
+    
+    const availableGamers = gameState.gamers.filter((gamer) => 
+        gamer.hearts > 0 && !gameState.activeAlerts[gamer.id]
+    );
+    
+    if (availableGamers.length === 0) return;
+    
+    const maxAlerts = gameState.difficultyPhase === 3 ? Math.min(2, availableGamers.length) : 1;
+    const numAlerts = Math.random() < 0.3 && maxAlerts === 2 ? 2 : 1;
+    
+    for (let i = 0; i < numAlerts && availableGamers.length > 0; i++) {
+        const randomGamerIndex = Math.floor(Math.random() * availableGamers.length);
+        const selectedGamer = availableGamers[randomGamerIndex];
+        availableGamers.splice(randomGamerIndex, 1);
+        
+        const alertType = gameData.alertTypes[Math.floor(Math.random() * gameData.alertTypes.length)];
+        showAlert(selectedGamer.id, alertType);
+    }
+}
+
+function showAlert(gamerId, alertType) {
+    const alertElement = document.getElementById(`alert${gamerId.slice(-1)}`);
+    if (!alertElement) return;
+    
+    const alertIcon = alertElement.querySelector('.alert-icon');
+    const alertTimer = alertElement.querySelector('.alert-timer');
+    
+    if (alertIcon) alertIcon.textContent = alertType.icon;
+    alertElement.style.backgroundColor = alertType.color;
+    alertElement.classList.remove('hidden');
+    
+    gameState.activeAlerts[gamerId] = {
+        type: alertType.type,
+        startTime: Date.now(),
+        duration: 5000
+    };
+    
+    let progress = 0;
+    const timerInterval = setInterval(() => {
+        progress += 2;
+        if (alertTimer) {
+            alertTimer.style.setProperty('--timer-width', `${progress}%`);
+        }
+        
+        if (progress >= 100) {
+            clearInterval(timerInterval);
+            handleAlertTimeout(gamerId);
+        }
+    }, 100);
+    
+    gameState.alertIntervals[gamerId] = timerInterval;
+}
+
+function handleAlertTimeout(gamerId) {
+    clearAlert(gamerId);
+    
+    const gamerIndex = gameState.gamers.findIndex(g => g.id === gamerId);
+    if (gamerIndex !== -1) {
+        gameState.gamers[gamerIndex].hearts--;
+        gameState.gamers[gamerIndex].performance = Math.max(0, gameState.gamers[gamerIndex].performance - 15);
+        
+        if (gameState.gamers[gamerIndex].hearts <= 0) {
+            eliminateGamer(gamerId);
+        }
+        
+        gameState.failedInterventions++;
+        showFeedback('¡Demasiado tarde! El gamer perdió energía', false);
+        updateGameUI();
+    }
+}
+
+function selectAction(action) {
+    console.log('Action selected:', action);
+    gameState.selectedAction = action;
+    
+    document.querySelectorAll('.control-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    const selectedBtn = document.querySelector(`[data-action="${action}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
+}
+
+function handleGamerClick(gamerId) {
+    console.log('Gamer clicked:', gamerId, 'Selected action:', gameState.selectedAction);
+    if (!gameState.selectedAction || !gameState.activeAlerts[gamerId]) return;
+    
+    const alert = gameState.activeAlerts[gamerId];
+    
+    if (gameState.selectedAction === alert.type) {
+        handleCorrectIntervention(gamerId);
+    } else {
+        handleWrongIntervention(gamerId);
+    }
+    
+    gameState.selectedAction = null;
+    document.querySelectorAll('.control-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+}
+
+function handleCorrectIntervention(gamerId) {
+    clearAlert(gamerId);
+    
+    const gamerIndex = gameState.gamers.findIndex(g => g.id === gamerId);
+    if (gamerIndex !== -1) {
+        gameState.gamers[gamerIndex].performance = Math.min(100, gameState.gamers[gamerIndex].performance + 10);
+        gameState.correctInterventions++;
+        
+        const phrases = [
+            "¡Excelente intervención, Coach!",
+            "¡El equipo está en buenas manos!",
+            "¡Sigue así, campeón!",
+            "¡Gran trabajo cuidando a tu equipo!"
+        ];
+        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+        showFeedback(phrase, true);
+    }
+    
+    updateGameUI();
+}
+
+function handleWrongIntervention(gamerId) {
+    const gamerIndex = gameState.gamers.findIndex(g => g.id === gamerId);
+    if (gamerIndex !== -1) {
+        gameState.gamers[gamerIndex].hearts--;
+        gameState.gamers[gamerIndex].performance = Math.max(0, gameState.gamers[gamerIndex].performance - 15);
+        
+        if (gameState.gamers[gamerIndex].hearts <= 0) {
+            eliminateGamer(gamerId);
+        }
+        
+        gameState.failedInterventions++;
+        showFeedback('¡Intervención incorrecta!', false);
+    }
+    
+    clearAlert(gamerId);
+    updateGameUI();
+}
+
+function clearAlert(gamerId) {
+    const alertElement = document.getElementById(`alert${gamerId.slice(-1)}`);
+    if (alertElement) {
+        alertElement.classList.add('hidden');
+    }
+    
+    if (gameState.alertIntervals[gamerId]) {
+        clearInterval(gameState.alertIntervals[gamerId]);
+        delete gameState.alertIntervals[gamerId];
+    }
+    
+    delete gameState.activeAlerts[gamerId];
+}
+
+function eliminateGamer(gamerId) {
+    const gamerElement = document.getElementById(gamerId);
+    if (gamerElement) {
+        gamerElement.classList.add('eliminated');
+    }
+    gameState.activeGamers--;
+    
+    clearAlert(gamerId);
+    
+    if (gameState.activeGamers === 0) {
+        endGame();
+    }
+}
+
+function updateGameUI() {
+    if (gameElements.activeGamers) {
+        gameElements.activeGamers.textContent = gameState.activeGamers;
+    }
+    
+    gameState.gamers.forEach((gamer) => {
+        const gamerElement = document.getElementById(gamer.id);
+        if (!gamerElement) return;
+        
+        const performanceBar = gamerElement.querySelector('.performance-fill');
+        const performanceText = gamerElement.querySelector('.performance-text');
+        const hearts = gamerElement.querySelectorAll('.heart');
+        
+        if (performanceBar) {
+            performanceBar.style.width = `${gamer.performance}%`;
+        }
+        if (performanceText) {
+            performanceText.textContent = `${gamer.performance}%`;
+        }
+        
+        hearts.forEach((heart, heartIndex) => {
+            if (heartIndex < gamer.hearts) {
+                heart.classList.add('active');
+            } else {
+                heart.classList.remove('active');
+            }
+        });
+    });
+}
+
+function showFeedback(message, isSuccess) {
+    if (!gameElements.feedback) return;
+    
+    gameElements.feedback.textContent = message;
+    gameElements.feedback.classList.remove('error');
+    if (!isSuccess) {
+        gameElements.feedback.classList.add('error');
+    }
+    gameElements.feedback.classList.add('show');
+    
+    setTimeout(() => {
+        if (gameElements.feedback) {
+            gameElements.feedback.classList.remove('show');
+        }
+    }, 2000);
+}
+
+function endGame() {
+    console.log('Ending game');
+    gameState.gameActive = false;
+    
+    if (gameState.gameInterval) {
+        clearInterval(gameState.gameInterval);
+    }
+    
+    gameState.alertTimeouts.forEach(timeout => clearTimeout(timeout));
+    gameState.alertTimeouts = [];
+    
+    Object.values(gameState.alertIntervals).forEach(interval => clearInterval(interval));
+    gameState.alertIntervals = {};
+    
+    Object.keys(gameState.activeAlerts).forEach(gamerId => clearAlert(gamerId));
+    
+    showResults();
+}
+
+function showResults() {
+    const survivors = gameState.activeGamers;
+    
+    if (survivors === 3) {
+        if (resultElements.resultTitle) resultElements.resultTitle.textContent = '¡VICTORIA PERFECTA!';
+        if (resultElements.resultTrophy) resultElements.resultTrophy.textContent = '🏆';
+        if (resultElements.finalMessage) resultElements.finalMessage.textContent = '¡Increíble trabajo, Coach! Has mantenido a todo el equipo saludable y en la final. ¡Eres un verdadero maestro de la salud digital!';
+    } else if (survivors >= 1) {
+        if (resultElements.resultTitle) resultElements.resultTitle.textContent = '¡VICTORIA PARCIAL!';
+        if (resultElements.resultTrophy) resultElements.resultTrophy.textContent = '🥈';
+        if (resultElements.finalMessage) resultElements.finalMessage.textContent = `Has logrado que ${survivors} gamer${survivors > 1 ? 's' : ''} llegue${survivors > 1 ? 'n' : ''} al final. ¡Buen trabajo! Recuerda que cuidar la salud digital es fundamental para el rendimiento.`;
+    } else {
+        if (resultElements.resultTitle) resultElements.resultTitle.textContent = 'MISIÓN APRENDIDA';
+        if (resultElements.resultTrophy) resultElements.resultTrophy.textContent = '📚';
+        if (resultElements.finalMessage) resultElements.finalMessage.textContent = '¡No te rindas, Coach! Cada intento nos enseña más sobre la importancia de los hábitos saludables. La práctica hace al maestro.';
+    }
+    
+    if (resultElements.survivorsCount) resultElements.survivorsCount.textContent = survivors;
+    if (resultElements.correctInterventions) resultElements.correctInterventions.textContent = gameState.correctInterventions;
+    if (resultElements.failedInterventions) resultElements.failedInterventions.textContent = gameState.failedInterventions;
+    
+    showScreen('results');
+}
+
+function resetGame() {
+    console.log('Resetting game');
+    stopCurrentSpeech();
+    
+    gameState = {
+        currentScreen: 'tutorial',
+        gameTimer: 90,
+        gameActive: false,
+        selectedAction: null,
+        gamers: [...gameData.gamers],
+        activeGamers: 3,
+        correctInterventions: 0,
+        failedInterventions: 0,
+        activeAlerts: {},
+        alertIntervals: {},
+        gameInterval: null,
+        alertTimeouts: [],
+        difficultyPhase: 1
+    };
+    
+    // Reset UI
+    document.querySelectorAll('.gamer').forEach(gamer => {
+        gamer.classList.remove('eliminated');
+        const performanceBar = gamer.querySelector('.performance-fill');
+        const performanceText = gamer.querySelector('.performance-text');
+        if (performanceBar) performanceBar.style.width = '80%';
+        if (performanceText) performanceText.textContent = '80%';
+        
+        const hearts = gamer.querySelectorAll('.heart');
+        hearts.forEach(heart => heart.classList.add('active'));
+    });
+    
+    document.querySelectorAll('.alert-bubble').forEach(alert => {
+        alert.classList.add('hidden');
+    });
+    
+    document.querySelectorAll('.control-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    showScreen('tutorial');
+    startTutorial();
+}
