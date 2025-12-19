@@ -3,181 +3,645 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coach de eSports - Tutorial Completo</title>
-    <link rel="stylesheet" href="style.css">
+    <title>El Coach del Equipo de Estrellas</title>
+    <style>
+        /* --- ESTILOS GENERALES Y DISEÑO --- */
+        :root {
+            --bg-dark: #1a1a2e;
+            --panel-bg: #16213e;
+            --highlight: #e94560; /* Rojo Rosado */
+            --accent: #0f3460;
+            --neon-green: #00ff88;
+            --neon-blue: #00ccff;
+            --text-main: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden; /* Evitar scroll */
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none; /* Evitar selección de texto al hacer click rápido */
+        }
+
+        /* Pantallas (Tutorial, Juego, Resultados) */
+        .screen {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: none; /* Oculto por defecto */
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-dark);
+            z-index: 10;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* --- UI TUTORIAL Y MODALES --- */
+        .panel-box {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 20px;
+            border: 4px solid var(--neon-blue);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 25px rgba(0, 204, 255, 0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        h1 { color: var(--neon-blue); margin-top: 0; }
+        
+        /* Ajuste para el texto del tutorial */
+        .tutorial-text { font-size: 1.3rem; line-height: 1.6; min-height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .tutorial-text b { color: var(--neon-green); }
+
+        .btn-large {
+            background: var(--highlight);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 5px 0 #9e1c32;
+        }
+
+        .btn-large:active {
+            transform: translateY(5px);
+            box-shadow: none;
+        }
+
+        /* --- PANTALLA DE JUEGO --- */
+        .game-top-bar {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            background: rgba(0,0,0,0.5);
+            box-sizing: border-box;
+        }
+
+        .hud-item {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: #333;
+            padding: 5px 15px;
+            border-radius: 10px;
+            border: 2px solid var(--neon-blue);
+        }
+
+        .pause-btn {
+            background: #ffaa00;
+            border: none;
+            border-radius: 50%;
+            width: 50px; height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #b37700;
+        }
+
+        /* --- AREA DE JUGADORES (ARENA) --- */
+        .arena {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            margin-bottom: 20px;
+            margin-top: 60px;
+        }
+
+        .gamer-container {
+            position: relative;
+            width: 140px;
+            text-align: center;
+            cursor: pointer; /* Indica que se puede hacer click */
+            transition: transform 0.1s;
+        }
+
+        .gamer-container:active { transform: scale(0.95); }
+
+        /* Burbuja de Alerta */
+        .alert-bubble {
+            position: absolute;
+            top: -60px; left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 4px solid var(--highlight);
+            border-radius: 50%;
+            width: 70px; height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            z-index: 5;
+            animation: bounce 0.6s infinite alternate;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .alert-bubble.hidden { display: none; }
+
+        /* Barra de tiempo de la alerta */
+        .alert-timer-bg {
+            position: absolute; bottom: -10px; left: 10px; right: 10px;
+            height: 8px; background: #333; border-radius: 4px; overflow: hidden;
+        }
+        .alert-timer-fill {
+            height: 100%; background: var(--highlight); width: 100%;
+        }
+
+        /* Avatar del Jugador */
+        .avatar-box {
+            background: #2a2a40;
+            border: 3px solid #4a4a60;
+            border-radius: 15px;
+            height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .monitor-img { font-size: 4rem; margin-bottom: 10px; }
+        
+        /* Estado Eliminado */
+        .gamer-container.eliminated { opacity: 0.5; filter: grayscale(100%); pointer-events: none; }
+        .gamer-container.eliminated .monitor-img { content: "💀"; }
+
+        /* Stats */
+        .stats-box { background: rgba(0,0,0,0.6); padding: 5px; border-radius: 10px; margin-top: 5px; }
+        .gamer-name { font-weight: bold; color: var(--neon-blue); }
+        .lives { font-size: 1.2rem; letter-spacing: 3px; }
+
+        /* --- TABLETA DE CONTROLES (ABAJO) --- */
+        .coach-tablet {
+            background: #eee;
+            color: #222;
+            width: 100%;
+            max-width: 800px;
+            padding: 15px;
+            border-top-left-radius: 25px;
+            border-top-right-radius: 25px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+        }
+
+        .tablet-header { font-weight: bold; margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase; color: #555; }
+
+        .tools-grid {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .tool-btn {
+            background: white;
+            border: 3px solid #ccc;
+            border-radius: 12px;
+            padding: 8px;
+            width: 90px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .tool-btn .icon { font-size: 2.2rem; display: block; }
+        .tool-btn .label { font-size: 0.8rem; font-weight: bold; margin-top: 5px; }
+
+        /* ESTADO SELECCIONADO (IMPORTANTE) */
+        .tool-btn.selected {
+            background: #e0ffe0;
+            border-color: var(--neon-green);
+            transform: translateY(-10px);
+            box-shadow: 0 10px 15px rgba(0, 255, 136, 0.4);
+        }
+
+        /* --- MODAL DE PAUSA --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center; align-items: center;
+            z-index: 100;
+        }
+        .modal-overlay.visible { display: flex; }
+
+        .rules-list { text-align: left; margin: 20px 0; }
+        .rule-row { margin-bottom: 15px; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+        .rule-icon { font-size: 2rem; background: #333; padding: 5px; border-radius: 50%; }
+
+        /* --- ANIMACIONES --- */
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        @keyframes bounce { from { top: -60px; } to { top: -70px; } }
+        
+        /* Animación de Error */
+        @keyframes shake { 
+            0% { transform: translateX(0); } 25% { transform: translateX(-8px); } 
+            75% { transform: translateX(8px); } 100% { transform: translateX(0); } 
+        }
+        .shaking { animation: shake 0.4s; border: 2px solid red !important; }
+
+        /* Animación de Éxito */
+        .flash-success { background-color: var(--neon-green) !important; transition: background 0.5s; }
+
+    </style>
 </head>
 <body>
-    <!-- Tutorial Screen -->
+
+    <!-- 1. PANTALLA DE TUTORIAL (MEJORADA) -->
     <div id="tutorial-screen" class="screen active">
-        <div class="tutorial-container">
-            <button class="skip-tutorial" id="skip-tutorial">SALTAR TUTORIAL</button>
-            <div class="tutorial-progress" id="tutorial-progress">1/6</div>
-            
-            <h1 class="tutorial-title" id="tutorial-title">¡Bienvenido, Coach!</h1>
-            
-            <div class="tutorial-content" id="tutorial-content">
-                <div class="tutorial-text" id="tutorial-text">
-                    ¡Hola, futuro coach de eSports! Soy tu entrenador y te voy a enseñar cómo cuidar la salud de tus gamers durante una final muy importante.
-                </div>
-                <div class="tutorial-animation" id="tutorial-animation">
-                    <div class="welcome-animation">🎮</div>
-                </div>
+        <div class="panel-box">
+            <h1>🎮 ¡Bienvenido Coach!</h1>
+            <div id="tutorial-text-area" class="tutorial-text">
+                <!-- El contenido se llena dinámicamente -->
             </div>
-            
-            <div class="tutorial-controls">
-                <div class="audio-controls">
-                    <button class="audio-btn" id="mute-btn">🔊</button>
-                    <button class="audio-btn" id="pause-audio">⏸️</button>
-                </div>
-                <button class="continue-btn" id="continue-btn">CONTINUAR</button>
-            </div>
+            <button class="btn-large" id="btn-next-step">Siguiente ➡️</button>
         </div>
     </div>
 
-    <!-- Game Screen -->
+    <!-- 2. PANTALLA DE JUEGO -->
     <div id="game-screen" class="screen">
-        <button class="help-button" id="help-button">?</button>
         
-        <div class="game-header">
-            <div class="timer-container">
-                <h2>Tiempo: <span id="timer">90</span>s</h2>
-            </div>
-            <div class="score-container">
-                <h3>Gamers Activos: <span id="active-gamers">3</span></h3>
-            </div>
+        <!-- Barra superior -->
+        <div class="game-top-bar">
+            <button class="pause-btn" id="btn-pause">⏸️</button>
+            <div class="hud-item">⏰ <span id="timer">90</span>s</div>
+            <div class="hud-item">Gamers: <span id="active-gamers">3</span></div>
         </div>
 
+        <!-- Zona de Juego -->
         <div class="arena">
-            <div class="gamer-container">
-                <!-- Gamer 1 -->
-                <div class="gamer" id="gamer1" data-gamer="gamer1">
-                    <div class="alert-bubble hidden" id="alert1">
-                        <div class="alert-icon"></div>
-                        <div class="alert-timer"></div>
-                    </div>
-                    <div class="gamer-setup">
-                        <div class="monitor"></div>
-                        <div class="gamer-chair">
-                            <div class="gamer-avatar">Alex</div>
-                        </div>
-                    </div>
-                    <div class="gamer-stats">
-                        <div class="gamer-name">Alex</div>
-                        <div class="performance-bar">
-                            <div class="performance-fill" style="width: 80%"></div>
-                            <span class="performance-text">80%</span>
-                        </div>
-                        <div class="hearts">
-                            <span class="heart active">❤️</span>
-                            <span class="heart active">❤️</span>
-                            <span class="heart active">❤️</span>
-                        </div>
-                    </div>
+            <!-- JUGADOR 1 -->
+            <div class="gamer-container" id="gamer-1" onclick="applyTool(1)">
+                <div class="alert-bubble hidden" id="alert-1">
+                    <span class="emoji">😫</span>
+                    <div class="alert-timer-bg"><div class="alert-timer-fill"></div></div>
                 </div>
-
-                <!-- Gamer 2 -->
-                <div class="gamer" id="gamer2" data-gamer="gamer2">
-                    <div class="alert-bubble hidden" id="alert2">
-                        <div class="alert-icon"></div>
-                        <div class="alert-timer"></div>
-                    </div>
-                    <div class="gamer-setup">
-                        <div class="monitor"></div>
-                        <div class="gamer-chair">
-                            <div class="gamer-avatar">Luna</div>
-                        </div>
-                    </div>
-                    <div class="gamer-stats">
-                        <div class="gamer-name">Luna</div>
-                        <div class="performance-bar">
-                            <div class="performance-fill" style="width: 80%"></div>
-                            <span class="performance-text">80%</span>
-                        </div>
-                        <div class="hearts">
-                            <span class="heart active">❤️</span>
-                            <span class="heart active">❤️</span>
-                            <span class="heart active">❤️</span>
-                        </div>
-                    </div>
+                <div class="avatar-box" id="avatar-1">
+                    <div class="monitor-img">👩‍💻</div>
                 </div>
+                <div class="stats-box">
+                    <div class="gamer-name">Luna</div>
+                    <div class="lives" id="lives-1">❤️❤️❤️</div>
+                </div>
+            </div>
 
-                <!-- Gamer 3 -->
-                <div class="gamer" id="gamer3" data-gamer="gamer3">
-                    <div class="alert-bubble hidden" id="alert3">
-                        <div class="alert-icon"></div>
-                        <div class="alert-timer"></div>
-                    </div>
-                    <div class="gamer-setup">
-                        <div class="monitor"></div>
-                        <div class="gamer-chair">
-                            <div class="gamer-avatar">Max</div>
-                        </div>
-                    </div>
-                    <div class="gamer-stats">
-                        <div class="gamer-name">Max</div>
-                        <div class="performance-bar">
-                            <div class="performance-fill" style="width: 80%"></div>
-                            <span class="performance-text">80%</span>
-                        </div>
-                        <div class="hearts">
-                            <span class="heart active">❤️</span>
-                            <span class="heart active">❤️</span>
-                            <span class="heart active">❤️</span>
-                        </div>
-                    </div>
+            <!-- JUGADOR 2 -->
+            <div class="gamer-container" id="gamer-2" onclick="applyTool(2)">
+                <div class="alert-bubble hidden" id="alert-2">
+                    <span class="emoji">😫</span>
+                    <div class="alert-timer-bg"><div class="alert-timer-fill"></div></div>
+                </div>
+                <div class="avatar-box" id="avatar-2">
+                    <div class="monitor-img">👨‍💻</div>
+                </div>
+                <div class="stats-box">
+                    <div class="gamer-name">Alex</div>
+                    <div class="lives" id="lives-2">❤️❤️❤️</div>
+                </div>
+            </div>
+
+            <!-- JUGADOR 3 -->
+            <div class="gamer-container" id="gamer-3" onclick="applyTool(3)">
+                <div class="alert-bubble hidden" id="alert-3">
+                    <span class="emoji">😫</span>
+                    <div class="alert-timer-bg"><div class="alert-timer-fill"></div></div>
+                </div>
+                <div class="avatar-box" id="avatar-3">
+                    <div class="monitor-img">🧑‍💻</div>
+                </div>
+                <div class="stats-box">
+                    <div class="gamer-name">Max</div>
+                    <div class="lives" id="lives-3">❤️❤️❤️</div>
                 </div>
             </div>
         </div>
 
-        <div class="coach-controls">
-            <h4>Tableta de Coach</h4>
-            <div class="control-buttons">
-                <button class="control-btn" data-action="postura" id="btn-postura">
-                    <span class="btn-icon">🧘</span>
-                    <span class="btn-label">Postura</span>
-                </button>
-                <button class="control-btn" data-action="distancia" id="btn-distancia">
-                    <span class="btn-icon">👀</span>
-                    <span class="btn-label">Distancia</span>
-                </button>
-                <button class="control-btn" data-action="pausa" id="btn-pausa">
-                    <span class="btn-icon">🕺</span>
-                    <span class="btn-label">Pausa</span>
-                </button>
-                <button class="control-btn" data-action="descanso" id="btn-descanso">
-                    <span class="btn-icon">⏸️</span>
-                    <span class="btn-label">Descanso</span>
-                </button>
+        <!-- Controles (Tableta) -->
+        <div class="coach-tablet">
+            <div class="tablet-header">1. TOCA UNA HERRAMIENTA &nbsp;&nbsp;&nbsp; 2. TOCA AL JUGADOR</div>
+            <div class="tools-grid">
+                <div class="tool-btn" id="btn-postura" onclick="selectTool('postura')">
+                    <span class="icon">🧘</span>
+                    <span class="label">POSTURA</span>
+                </div>
+                <div class="tool-btn" id="btn-distancia" onclick="selectTool('distancia')">
+                    <span class="icon">👀</span>
+                    <span class="label">DISTANCIA</span>
+                </div>
+                <div class="tool-btn" id="btn-pausa" onclick="selectTool('pausa')">
+                    <span class="icon">🕺</span>
+                    <span class="label">PAUSA ACT.</span>
+                </div>
+                <div class="tool-btn" id="btn-descanso" onclick="selectTool('descanso')">
+                    <span class="icon">⏸️</span>
+                    <span class="label">DESCANSO</span>
+                </div>
             </div>
         </div>
-
-        <div class="feedback-message" id="feedback"></div>
     </div>
 
-    <!-- Results Screen -->
+    <!-- 3. MODAL DE PAUSA / REGLAS -->
+    <div id="pause-modal" class="modal-overlay">
+        <div class="panel-box">
+            <h2>⏸️ JUEGO PAUSADO</h2>
+            <p>¡Recordemos las reglas!</p>
+            <div class="rules-list">
+                <div class="rule-row"><span class="rule-icon">🧘</span> Usa POSTURA si ves dolor de espalda 😫.</div>
+                <div class="rule-row"><span class="rule-icon">👀</span> Usa DISTANCIA si ves ojos rojos 😵.</div>
+                <div class="rule-row"><span class="rule-icon">🕺</span> Usa PAUSA si se quedan dormidos 💤.</div>
+                <div class="rule-row"><span class="rule-icon">⏸️</span> Usa DESCANSO si el cerebro echa humo 🤯.</div>
+            </div>
+            <button class="btn-large" id="btn-resume">VOLVER A JUGAR</button>
+        </div>
+    </div>
+
+    <!-- 4. PANTALLA DE RESULTADOS -->
     <div id="results-screen" class="screen">
-        <div class="results-container">
-            <h1 id="result-title"></h1>
-            <div id="result-trophy"></div>
-            <div class="result-stats">
-                <div class="stat-item">
-                    <span class="stat-label">Gamers que sobrevivieron:</span>
-                    <span class="stat-value" id="survivors-count">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Intervenciones correctas:</span>
-                    <span class="stat-value" id="correct-interventions">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Intervenciones fallidas:</span>
-                    <span class="stat-value" id="failed-interventions">0</span>
-                </div>
-            </div>
-            <div class="coach-message" id="final-message"></div>
-            <button id="play-again" class="play-again-btn">¡Jugar de Nuevo!</button>
+        <div class="panel-box">
+            <h1 id="res-title">FIN DE LA PARTIDA</h1>
+            <div style="font-size: 5rem;" id="res-icon">🏆</div>
+            <p id="res-msg">Mensaje final aquí</p>
+            <p>Intervenciones Correctas: <b id="res-score" style="color:var(--neon-green)">0</b></p>
+            <button class="btn-large" onclick="location.reload()">JUGAR OTRA VEZ 🔄</button>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script>
+        /* --- LÓGICA DEL JUEGO --- */
+
+        // CONFIGURACIÓN
+        const TOTAL_TIME = 90;
+        let gameTime = TOTAL_TIME;
+        let score = 0;
+        let isPaused = false;
+        let activeTool = null; 
+        let activeGamersCount = 3;
+        
+        let gameLoopTimer;
+        let alertGeneratorTimer;
+
+        // ESTADO DE LOS JUGADORES
+        const gamers = [
+            { id: 1, name: "Luna", lives: 3, currentAlert: null, timer: null, isOut: false },
+            { id: 2, name: "Alex", lives: 3, currentAlert: null, timer: null, isOut: false },
+            { id: 3, name: "Max", lives: 3, currentAlert: null, timer: null, isOut: false }
+        ];
+
+        // DEFINICIÓN DE ALERTAS
+        const ALERTS = {
+            'postura':   { emoji: '😫', solution: 'postura',  duration: 6000 },
+            'distancia': { emoji: '😵', solution: 'distancia', duration: 6000 },
+            'pausa':     { emoji: '💤', solution: 'pausa',    duration: 5000 },
+            'descanso':  { emoji: '🤯', solution: 'descanso', duration: 5000 }
+        };
+
+        /* --- TUTORIAL MEJORADO --- */
+        const tutorialSteps = [
+            // Paso 0: Misión
+            "<b>Misión:</b> Eres el Coach. Tu equipo está jugando la final, pero se están cansando. ¡Debes cuidarlos!", 
+            
+            // Paso 1: Mecánica Básica
+            "<b>Cómo jugar:</b><br>1. Selecciona la HERRAMIENTA correcta abajo.<br>2. Toca al JUGADOR que tiene problemas.",
+            
+            // Paso 2: Reglas Físicas (Postura y Ojos)
+            "<b>Reglas del Cuerpo:</b><br><br>Si ves Dolor de Espalda 😫 ➔ Usa 🧘 <b>POSTURA</b>.<br>Si ves Ojos Rojos 😵 ➔ Usa 👀 <b>DISTANCIA</b>.",
+            
+            // Paso 3: Reglas Mentales (Sueño y Estrés)
+            "<b>Reglas de Energía:</b><br><br>Si se duermen 💤 ➔ Usa 🕺 <b>PAUSA ACTIVA</b>.<br>Si el cerebro echa humo 🤯 ➔ Usa ⏸️ <b>DESCANSO</b>.",
+            
+            // Paso 4: Advertencia final
+            "¡Atención! Si ignoras las alertas, perderán vidas ❤️.<br>¡Vamos a ganar ese trofeo!"
+        ];
+        
+        let currentStepIndex = 0;
+        
+        // Inicializar texto del tutorial
+        document.getElementById('tutorial-text-area').innerHTML = tutorialSteps[0];
+
+        document.getElementById('btn-next-step').addEventListener('click', () => {
+            currentStepIndex++;
+            
+            if (currentStepIndex < tutorialSteps.length) {
+                document.getElementById('tutorial-text-area').innerHTML = tutorialSteps[currentStepIndex];
+                
+                if(currentStepIndex === tutorialSteps.length - 1) {
+                    document.getElementById('btn-next-step').innerText = "¡A LA FINAL!";
+                }
+            } else {
+                startGame();
+            }
+        });
+
+        /* --- CONTROL DE JUEGO --- */
+        function startGame() {
+            document.getElementById('tutorial-screen').classList.remove('active');
+            document.getElementById('game-screen').classList.add('active');
+            
+            // Loop de Tiempo
+            gameLoopTimer = setInterval(() => {
+                if(!isPaused) {
+                    gameTime--;
+                    document.getElementById('timer').innerText = gameTime;
+                    if(gameTime <= 0) endGame(true);
+                }
+            }, 1000);
+
+            scheduleNextAlert();
+        }
+
+        function scheduleNextAlert() {
+            // Aumenta la velocidad a medida que pasa el tiempo
+            let delay = 3000;
+            if (gameTime < 60) delay = 2000;
+            if (gameTime < 30) delay = 1200;
+
+            alertGeneratorTimer = setTimeout(() => {
+                if(!isPaused && activeGamersCount > 0) {
+                    createRandomAlert();
+                }
+                scheduleNextAlert(); 
+            }, delay);
+        }
+
+        function createRandomAlert() {
+            const availableGamers = gamers.filter(g => !g.isOut && g.currentAlert === null);
+            
+            if(availableGamers.length > 0) {
+                const randomGamer = availableGamers[Math.floor(Math.random() * availableGamers.length)];
+                const keys = Object.keys(ALERTS);
+                const randomType = keys[Math.floor(Math.random() * keys.length)];
+                
+                triggerAlert(randomGamer, randomType);
+            }
+        }
+
+        function triggerAlert(gamer, typeKey) {
+            const data = ALERTS[typeKey];
+            gamer.currentAlert = data.solution; 
+
+            // Mostrar UI
+            const bubble = document.getElementById(`alert-${gamer.id}`);
+            bubble.classList.remove('hidden');
+            bubble.querySelector('.emoji').innerText = data.emoji;
+            const barFill = bubble.querySelector('.alert-timer-fill');
+            barFill.style.width = '100%';
+
+            let timeLeft = data.duration;
+            const intervalStep = 100; 
+            
+            gamer.timer = setInterval(() => {
+                if(!isPaused) {
+                    timeLeft -= intervalStep;
+                    const pct = (timeLeft / data.duration) * 100;
+                    barFill.style.width = pct + '%';
+
+                    if(timeLeft <= 0) {
+                        handleMissedAlert(gamer);
+                    }
+                }
+            }, intervalStep);
+        }
+
+        /* --- INTERACCIÓN DEL JUGADOR --- */
+        window.selectTool = function(toolName) {
+            activeTool = toolName;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById(`btn-${toolName}`).classList.add('selected');
+        }
+
+        window.applyTool = function(gamerId) {
+            const gamer = gamers.find(g => g.id === gamerId);
+            
+            if(gamer.isOut) return; 
+
+            if(!activeTool) {
+                const tablet = document.querySelector('.coach-tablet');
+                tablet.style.backgroundColor = "#ffcccc";
+                setTimeout(()=> tablet.style.backgroundColor = "#eee", 300);
+                return;
+            }
+
+            if(gamer.currentAlert === activeTool) {
+                resolveAlert(gamer, true);
+            } else {
+                animShake(gamerId);
+            }
+        }
+
+        function resolveAlert(gamer, success) {
+            clearInterval(gamer.timer);
+            gamer.currentAlert = null;
+            document.getElementById(`alert-${gamer.id}`).classList.add('hidden');
+
+            if(success) {
+                score++;
+                const avatar = document.getElementById(`avatar-${gamer.id}`);
+                avatar.classList.add('flash-success');
+                setTimeout(() => avatar.classList.remove('flash-success'), 500);
+            }
+        }
+
+        function handleMissedAlert(gamer) {
+            resolveAlert(gamer, false);
+            gamer.lives--;
+            updateLivesUI(gamer.id);
+            animShake(gamer.id); 
+
+            if(gamer.lives <= 0) {
+                eliminateGamer(gamer);
+            }
+        }
+
+        function updateLivesUI(id) {
+            const gamer = gamers.find(g => g.id === id);
+            let hearts = "";
+            for(let i=0; i<gamer.lives; i++) hearts += "❤️";
+            document.getElementById(`lives-${id}`).innerText = hearts;
+        }
+
+        function eliminateGamer(gamer) {
+            gamer.isOut = true;
+            activeGamersCount--;
+            document.getElementById('active-gamers').innerText = activeGamersCount;
+            
+            const container = document.getElementById(`gamer-${gamer.id}`);
+            container.classList.add('eliminated');
+            document.getElementById(`lives-${gamer.id}`).innerText = "❌";
+
+            if(activeGamersCount === 0) {
+                endGame(false);
+            }
+        }
+
+        function animShake(id) {
+            const el = document.getElementById(`avatar-${id}`);
+            el.classList.add('shaking');
+            setTimeout(() => el.classList.remove('shaking'), 400);
+        }
+
+        /* --- SISTEMA DE PAUSA --- */
+        const modal = document.getElementById('pause-modal');
+        document.getElementById('btn-pause').addEventListener('click', () => {
+            isPaused = true;
+            modal.classList.add('visible');
+        });
+
+        document.getElementById('btn-resume').addEventListener('click', () => {
+            isPaused = false;
+            modal.classList.remove('visible');
+        });
+
+        /* --- FIN DEL JUEGO --- */
+        function endGame(victory) {
+            clearInterval(gameLoopTimer);
+            clearTimeout(alertGeneratorTimer);
+            gamers.forEach(g => clearInterval(g.timer));
+
+            document.getElementById('game-screen').classList.remove('active');
+            document.getElementById('results-screen').classList.add('active');
+
+            const title = document.getElementById('res-title');
+            const icon = document.getElementById('res-icon');
+            const msg = document.getElementById('res-msg');
+
+            document.getElementById('res-score').innerText = score;
+
+            if(victory) {
+                title.innerText = "¡VICTORIA!";
+                title.style.color = "var(--neon-green)";
+                
+                if(activeGamersCount === 3) {
+                    icon.innerText = "🏆🏆🏆";
+                    msg.innerText = "¡Increíble! Todo el equipo llegó sano a la final.";
+                } else {
+                    icon.innerText = "🏆";
+                    msg.innerText = "¡Buen trabajo! Has salvado la partida.";
+                }
+            } else {
+                title.innerText = "GAME OVER";
+                title.style.color = "red";
+                icon.innerText = "🤕";
+                msg.innerText = "Todos los jugadores se lesionaron. ¡Recuerda las reglas de salud!";
+            }
+        }
+    </script>
 </body>
 </html>
